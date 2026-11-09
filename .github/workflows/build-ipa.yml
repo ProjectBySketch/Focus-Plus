@@ -1,12 +1,15 @@
 name: Build IPA
 
 on:
-  push:
-    branches: [main, preview]
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Focus Plus.xcodeproj/**"
+      - "Focus Plus/**"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -14,6 +17,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check that the source is present
+        run: |
+          if [ ! -d "Focus Plus.xcodeproj" ]; then
+            echo "::error::This repository carries no app source by design. Focus Plus is closed source: put the Xcode project and the app folder in the working tree (or check them out from the private source repository) before running this workflow."
+            exit 1
+          fi
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
@@ -52,3 +62,15 @@ jobs:
             "Print :CFBundleShortVersionString" \
             "build/FocusPlus.xcarchive/Products/Applications/Focus Plus.app/Info.plist")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Attach the IPA to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ format('v{0}', steps.version.outputs.version) }}
+          name: ${{ format('v{0}', steps.version.outputs.version) }}
+          body: |
+            Unsigned Release IPA of Focus Plus, built from the private source.
+            Re-sign it with your own certificate to install it on a device.
+          files: FocusPlus.ipa
+          fail_on_unmatched_files: true
+          make_latest: true
