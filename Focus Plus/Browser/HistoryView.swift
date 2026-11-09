@@ -74,12 +74,15 @@ struct HistoryView: View {
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("History")
-                    .font(.title3.bold())
-                Text("\(store.visitCount) visits · \(store.siteCount) sites · kept on this device")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 9) {
+                AppLogo(style: .tile, size: 26)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("History")
+                        .font(.title3.bold())
+                    Text("\(store.visitCount) visits · \(store.siteCount) sites · kept on this device")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Spacer()

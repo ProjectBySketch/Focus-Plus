@@ -165,6 +165,20 @@ struct SettingsSheet: View {
                 }
 
                 Section {
+                    Picker("Position", selection: $customization.chromePosition) {
+                        ForEach(ChromePosition.allCases) { position in
+                            Label(position.displayName, systemImage: position.symbol).tag(position)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    Toggle("Auto-hide while scrolled", isOn: $customization.autoHideChrome)
+                } header: {
+                    Text("Command bar")
+                } footer: {
+                    Text("The bar stays wherever you put it — no dragging it around. With auto-hide on it tucks itself away while you scroll down and returns as soon as you scroll up or tap the address field. It always steps aside for the keyboard, so the space bar is never covered while you search.")
+                }
+
+                Section {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Accent color")
                         HStack(spacing: 12) {

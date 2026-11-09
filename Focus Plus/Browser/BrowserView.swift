@@ -362,33 +362,19 @@ private struct ChromeIcon: View {
 struct PhoneBrowserLayout: View {
     @ObservedObject var manager: TabManager
     @ObservedObject private var flags = FlagsStore.shared
+    @ObservedObject private var customization = CustomizationStore.shared
     @FocusState private var addressFocused: Bool
     @State private var showTrackerTip = false
-    @State private var availableHeight: CGFloat = 0
-    /// The live drag offset while the user moves the bar; committed to the
-    /// customization store when the drag ends.
-    @State private var dragLift: CGFloat = 0
 
     private var floating: Bool { flags.isEnabled(.floatingChrome) }
+    private var top: Bool { customization.chromePosition == .top }
 
-    /// How far the bottom bar is lifted up from its default spot right now.
-    private var barLift: CGFloat {
-        max(0, min(CGFloat(CustomizationStore.shared.searchBarLift) + dragLift, maxBarLift))
-    }
-    /// Keeps the bar from covering the status bar area at the top.
-    private var maxBarLift: CGFloat { max(0, availableHeight - 210) }
-
-    private var moveBarGesture: some Gesture {
-        DragGesture(minimumDistance: 4)
-            .onChanged { value in
-                dragLift = -value.translation.height
-            }
-            .onEnded { _ in
-                withAnimation(Theme.animation) {
-                    CustomizationStore.shared.searchBarLift = Double(barLift)
-                }
-                dragLift = 0
-            }
+    /// Tucks the bar away while the page is scrolled down, and brings it back
+    /// the moment you scroll up or tap the address field. It never hides while
+    /// the keyboard is up, so nothing sits on the space bar.
+    private var tucked: Bool {
+        guard customization.autoHideChrome, !addressFocused else { return false }
+        return (manager.activeTab?.model.scrollOffset ?? 0) > 60
     }
 
     var body: some View {
@@ -396,35 +382,22 @@ struct PhoneBrowserLayout: View {
             TabContentView(manager: manager)
 
             VStack(spacing: 8) {
-                if manager.isIncognito {
-                    IncognitoPill()
-                        .padding(.top, 2)
+                if top {
+                    if manager.isIncognito {
+                        IncognitoPill()
+                    }
+                    chrome
+                    Spacer(minLength: 0)
+                } else {
+                    if manager.isIncognito {
+                        IncognitoPill()
+                            .padding(.top, 2)
+                    }
+                    Spacer(minLength: 0)
+                    chrome
                 }
-                Spacer()
-                VStack(spacing: 10) {
-                    if showTrackerTip, let model = manager.activeTab?.model {
-                        TrackerTip(model: model)
-                            .padding(.horizontal, 24)
-                            .onTapGesture { withAnimation(Theme.animation) { showTrackerTip = false } }
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    }
-                    if let toastText = manager.toastText {
-                        StatusToast(text: toastText, symbol: manager.toastSymbol,
-                                    actionTitle: manager.toastActionTitle) {
-                            manager.allowPopupsForLastBlockedSite()
-                        }
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                    if let model = manager.activeTab?.model {
-                        PhoneChrome(manager: manager, model: model,
-                                    showTrackerTip: $showTrackerTip,
-                                    addressFocused: $addressFocused,
-                                    floating: floating)
-                            .gesture(moveBarGesture)
-                    }
-                }
-                .offset(y: -barLift)
             }
+            .animation(Theme.animation, value: top)
 
             if manager.showTabSwitcher {
                 TabSwitcher(manager: manager)
@@ -433,17 +406,38 @@ struct PhoneBrowserLayout: View {
             }
         }
         .animation(Theme.animation, value: manager.showTabSwitcher)
+        .animation(.snappy(duration: 0.28), value: tucked)
         .onChange(of: manager.showTabSwitcher) { _, isShowing in
             if !isShowing { manager.clearTabPreviews() }
         }
-        .background(
-            GeometryReader { geo in
-                Color.clear
-                    .onChange(of: geo.size.height, initial: true) { _, height in
-                        availableHeight = height
-                    }
+    }
+
+    private var chrome: some View {
+        VStack(spacing: 10) {
+            if showTrackerTip, let model = manager.activeTab?.model {
+                TrackerTip(model: model)
+                    .padding(.horizontal, 24)
+                    .onTapGesture { withAnimation(Theme.animation) { showTrackerTip = false } }
+                    .transition(.opacity.combined(with: .move(edge: top ? .top : .bottom)))
             }
-        )
+            if let toastText = manager.toastText {
+                StatusToast(text: toastText, symbol: manager.toastSymbol,
+                            actionTitle: manager.toastActionTitle) {
+                    manager.allowPopupsForLastBlockedSite()
+                }
+                .transition(.move(edge: top ? .top : .bottom).combined(with: .opacity))
+            }
+            if let model = manager.activeTab?.model {
+                PhoneChrome(manager: manager, model: model,
+                            showTrackerTip: $showTrackerTip,
+                            addressFocused: $addressFocused,
+                            floating: floating,
+                            top: top)
+            }
+        }
+        .opacity(tucked ? 0 : 1)
+        .offset(y: tucked ? (top ? -170 : 170) : 0)
+        .allowsHitTesting(!tucked)
     }
 }
 
@@ -453,11 +447,16 @@ private struct PhoneChrome: View {
     @Binding var showTrackerTip: Bool
     var addressFocused: FocusState<Bool>.Binding
     let floating: Bool
+    let top: Bool
+
+    private var focused: Bool { addressFocused.wrappedValue }
 
     var body: some View {
         VStack(spacing: 8) {
-            ProgressBar(model: model)
-                .padding(.horizontal, 4)
+            if !top {
+                ProgressBar(model: model)
+                    .padding(.horizontal, 4)
+            }
 
             HStack(spacing: 8) {
                 AddressField(model: model, showTrackerTip: $showTrackerTip,
@@ -470,40 +469,20 @@ private struct PhoneChrome: View {
                 }
             }
 
-            if addressFocused.wrappedValue {
+            if focused {
                 AddressSuggestionList(model: model, addressFocused: addressFocused)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.opacity.combined(with: .move(edge: top ? .bottom : .top)))
             }
 
-            HStack(spacing: 2) {
-                Button(action: model.goBack) {
-                    ChromeIcon(symbol: "chevron.left", dimmed: !model.canGoBack)
-                }
-                .buttonStyle(.plain)
-                .disabled(!model.canGoBack)
-
-                Button {
-                    withAnimation(Theme.animation) { manager.openTabSwitcher() }
-                } label: {
-                    ChromeIcon(symbol: "square.on.square", badge: manager.tabs.count)
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    manager.enterHistory()
-                } label: {
-                    ChromeIcon(symbol: "clock.arrow.circlepath")
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 8)
-
-                menuButton
+            // While the keyboard is up the second row goes away entirely, so
+            // the space bar and the rest of the keyboard are never covered.
+            if !focused {
+                actionRow
+                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .center)))
             }
-            .padding(.horizontal, 4)
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 10)
+        .padding(.vertical, focused ? 7 : 10)
         .background {
             if floating {
                 RoundedRectangle(cornerRadius: 26, style: .continuous)
@@ -512,19 +491,56 @@ private struct PhoneChrome: View {
                         RoundedRectangle(cornerRadius: 26, style: .continuous)
                             .strokeBorder(Theme.hairline)
                     )
-                    .shadow(color: .black.opacity(0.45), radius: 18, y: 8)
+                    .shadow(color: .black.opacity(0.45), radius: 18, y: top ? -8 : 8)
             } else {
                 Rectangle()
                     .fill(.ultraThinMaterial)
-                    .overlay(alignment: .top) {
+                    .overlay(alignment: top ? .bottom : .top) {
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                     }
-                    .ignoresSafeArea(edges: .bottom)
             }
         }
         .padding(.horizontal, floating ? 12 : 0)
-        .padding(.bottom, floating ? 4 : 0)
+        .padding(.top, floating && top ? 4 : 0)
+        .padding(.bottom, floating && !top ? 4 : 0)
         .foregroundStyle(.white)
+        .animation(Theme.animation, value: focused)
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 2) {
+            Button(action: model.goBack) {
+                ChromeIcon(symbol: "chevron.left", dimmed: !model.canGoBack)
+            }
+            .buttonStyle(.plain)
+            .disabled(!model.canGoBack)
+
+            Button {
+                withAnimation(Theme.animation) { manager.openTabSwitcher() }
+            } label: {
+                ChromeIcon(symbol: "square.on.square", badge: manager.tabs.count)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                manager.enterHistory()
+            } label: {
+                ChromeIcon(symbol: "clock.arrow.circlepath")
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                manager.enterFlags()
+            } label: {
+                ChromeIcon(symbol: "flag.checkered")
+            }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 8)
+
+            menuButton
+        }
+        .padding(.horizontal, 4)
     }
 
     private var menuButton: some View {

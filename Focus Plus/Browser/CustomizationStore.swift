@@ -106,15 +106,38 @@ enum StartPageSection: String, CaseIterable, Identifiable {
     }
 }
 
+/// Where the phone's command bar sits. A preset, not a drag: the bar stays
+/// exactly where it was put.
+enum ChromePosition: String, CaseIterable, Identifiable {
+    case bottom, top
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .bottom: return "Bottom"
+        case .top: return "Top"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .bottom: return "arrow.down.to.line"
+        case .top: return "arrow.up.to.line"
+        }
+    }
+}
+
 /// The accent colors the app ships with. The raw value is the string the
 /// choice is persisted under.
 enum Accent: String, CaseIterable, Identifiable {
-    case tangerine, coral, amber, mint, sky, violet, rose
+    case purple, tangerine, coral, amber, mint, sky, violet, rose
 
     var id: String { rawValue }
 
     var color: Color {
         switch self {
+        case .purple: return Color(red: 0.61, green: 0.38, blue: 0.99)
         case .tangerine: return Color(red: 1.0, green: 0.545, blue: 0.235)
         case .coral: return Color(red: 1.0, green: 0.42, blue: 0.42)
         case .amber: return Color(red: 1.0, green: 0.78, blue: 0.25)
@@ -214,12 +237,15 @@ final class CustomizationStore: ObservableObject {
     @Published var keepCookies: Bool {
         didSet { defaults.set(keepCookies, forKey: Keys.keepCookies) }
     }
-    /// How far the iPhone bottom bar (the search bar and its buttons) has
-    /// been dragged up from its default position, in points. Saved so the
-    /// bar stays where the user left it in both normal and minimalistic
-    /// mode; 0 means the default spot at the bottom.
-    @Published var searchBarLift: Double {
-        didSet { defaults.set(searchBarLift, forKey: Keys.searchBarLift) }
+    /// Where the phone's command bar lives. It no longer moves by dragging:
+    /// pick top or bottom once and it stays there.
+    @Published var chromePosition: ChromePosition {
+        didSet { defaults.set(chromePosition.rawValue, forKey: Keys.chromePosition) }
+    }
+    /// Tucks the command bar away while a page is scrolled down, and brings it
+    /// back the moment you scroll up or tap the address field.
+    @Published var autoHideChrome: Bool {
+        didSet { defaults.set(autoHideChrome, forKey: Keys.autoHideChrome) }
     }
     /// The interface's look. Christmas is the evergreen preset, so the festive
     /// theme and the rest are the same setting seen from two sides.
@@ -254,7 +280,17 @@ final class CustomizationStore: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        accent = Accent(rawValue: defaults.string(forKey: Keys.accent) ?? "") ?? .tangerine
+        // Purple is the app's own colour. Anyone who never picked an accent —
+        // or who still has the old default — is moved onto it once, so the
+        // change shows up on an existing install rather than only a fresh one.
+        let storedAccent = defaults.string(forKey: Keys.accent)
+        if !defaults.bool(forKey: Keys.accentSeededPurple),
+           storedAccent == nil || storedAccent == Accent.tangerine.rawValue {
+            accent = .purple
+            defaults.set(true, forKey: Keys.accentSeededPurple)
+        } else {
+            accent = Accent(rawValue: storedAccent ?? "") ?? .purple
+        }
         searchEngine = SearchEngine(rawValue: defaults.string(forKey: Keys.searchEngine) ?? "") ?? .focus
         customSearchTemplate = defaults.string(forKey: Keys.customSearchTemplate) ?? "https://duckduckgo.com/?q=%s"
         homepageEnabled = defaults.bool(forKey: Keys.homepageEnabled)
@@ -262,7 +298,8 @@ final class CustomizationStore: ObservableObject {
         pageZoom = defaults.object(forKey: Keys.pageZoom) as? Double ?? 1.0
         minimalisticMode = defaults.bool(forKey: Keys.minimalisticMode)
         keepCookies = defaults.object(forKey: Keys.keepCookies) as? Bool ?? true
-        searchBarLift = defaults.object(forKey: Keys.searchBarLift) as? Double ?? 0
+        chromePosition = ChromePosition(rawValue: defaults.string(forKey: Keys.chromePosition) ?? "") ?? .bottom
+        autoHideChrome = defaults.object(forKey: Keys.autoHideChrome) as? Bool ?? true
         themePreset = ThemePreset(rawValue: defaults.string(forKey: Keys.themePreset) ?? "")
             ?? ((defaults.object(forKey: Keys.christmasMode) as? Bool ?? true) ? .evergreen : .midnight)
         verifyDomains = defaults.bool(forKey: Keys.verifyDomains)
@@ -283,7 +320,9 @@ final class CustomizationStore: ObservableObject {
         static let pageZoom = "customization.pageZoom"
         static let minimalisticMode = "customization.minimalisticMode"
         static let keepCookies = "customization.keepCookies"
-        static let searchBarLift = "customization.searchBarLift"
+        static let chromePosition = "customization.chromePosition"
+        static let autoHideChrome = "customization.autoHideChrome"
+        static let accentSeededPurple = "customization.accentSeededPurple"
         static let christmasMode = "customization.christmasMode"
         static let themePreset = "customization.themePreset"
         static let verifyDomains = "customization.verifyDomains"

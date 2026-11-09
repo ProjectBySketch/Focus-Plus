@@ -26,6 +26,9 @@ final class BrowserModel: NSObject, ObservableObject {
     /// The page's own title, mirrored out of WebKit so the chrome and the
     /// history page can label a visit without asking the web view.
     @Published var pageTitle = ""
+    /// How far the page is scrolled, so the command bar can tuck itself away
+    /// while reading and come back on the way up.
+    @Published private(set) var scrollOffset: CGFloat = 0
     /// Called on the main thread each time a page finishes loading, so the
     /// tab manager can keep session-wide stats.
     var onPageLoaded: (() -> Void)?
@@ -76,6 +79,21 @@ final class BrowserModel: NSObject, ObservableObject {
         TrackerBlocker.install(into: controller)
         refreshExtensions()
         observeWebView()
+        observeScroll()
+    }
+
+    /// Mirrors the page's scroll position. Only real movement is published, so
+    /// the chrome does not re-render on every bounce.
+    private func observeScroll() {
+        webView.scrollView.publisher(for: \.contentOffset)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] point in
+                guard let self else { return }
+                if abs(point.y - self.scrollOffset) > 2 {
+                    self.scrollOffset = point.y
+                }
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Extension wiring

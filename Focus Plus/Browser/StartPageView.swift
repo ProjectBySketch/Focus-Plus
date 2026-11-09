@@ -26,6 +26,7 @@ struct StartPageView: View {
     @State private var newFavoriteTitle = ""
     @State private var newFavoriteURL = ""
     @State private var clock = Date()
+    @State private var logoIn = false
 
     private var sections: Set<StartPageSection> { customization.startPageSections }
     private var festive: Bool { customization.themePreset.isFestive && !incognito }
@@ -121,9 +122,15 @@ extension StartPageView {
 
     private var topBar: some View {
         HStack(alignment: .center, spacing: 10) {
-            Image(systemName: festive ? "snowflake" : "shield.lefthalf.filled")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Theme.accent)
+            AppLogo(style: .tile, size: 24)
+                .scaleEffect(logoIn ? 1 : 0.82)
+                .opacity(logoIn ? 1 : 0)
+                .shadow(color: Theme.accent.opacity(logoIn ? 0.45 : 0), radius: 12)
+                .onAppear {
+                    withAnimation(.spring(response: 0.55, dampingFraction: 0.7)) {
+                        logoIn = true
+                    }
+                }
             Text("FOCUS PLUS")
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .tracking(4)

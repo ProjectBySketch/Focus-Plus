@@ -56,12 +56,18 @@ page.
   app's `Extensions` folder and it loads: content scripts, CSS content scripts,
   background scripts, `storage.local`/`sync` and runtime messaging, in isolated
   worlds. Lua is a first-class option through an embedded Lua 5.3 VM.
-- **Customization** — accent colour, search engine (or a custom template),
-  homepage for new tabs, page zoom, minimalistic mode and the alternate app
-  icon, all saved on device. Settings also has a Start page section with a
-  switch per block (greeting, clock, favorites, open tabs, recently visited,
-  shortcuts, session stats) and a Favorites section where the grid can be
-  pruned and added to without opening the page.
+- **Customization** — accent colour (Purple by default), search engine (or a
+  custom template), homepage for new tabs, page zoom, minimalistic mode and the
+  alternate app icon, all saved on device. The phone's command bar sits where
+  you preset it — top or bottom, no dragging — and can tuck itself away while
+  you scroll, coming back on the way up; it always steps aside for the keyboard
+  so the space bar is never covered. Settings also has a Start page section
+  with a switch per block (greeting, clock, favorites, open tabs, recently
+  visited, shortcuts, session stats) and a Favorites section where the grid can
+  be pruned and added to without opening the page.
+- **The mark** — a minimal aperture-and-spark logo drawn in code, not an image,
+  so it stays crisp and takes the accent colour in use: on the start page, the
+  History and Flags headers, and its own tile animation when a tab opens.
 - **Looks** — six palettes under Settings → Appearance: Midnight, Christmas,
   Aurora, Sand, Mono and Ocean. Each one paints the chrome, the start page and
   the tab switcher; Christmas adds the pine-green night, falling snow and the

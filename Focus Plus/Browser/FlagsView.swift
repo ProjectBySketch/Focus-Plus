@@ -62,12 +62,15 @@ struct FlagsView: View {
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Flags")
-                    .font(.title3.bold())
-                Text("\(BrowserFlag.allCases.count) switches · saved on this device")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 9) {
+                AppLogo(style: .tile, size: 26)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Flags")
+                        .font(.title3.bold())
+                    Text("\(BrowserFlag.allCases.count) switches · saved on this device")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Spacer()
