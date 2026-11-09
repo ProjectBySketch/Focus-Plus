@@ -16,18 +16,22 @@ page.
   in Settings, and the internal pages themselves. Each flag shows its stage
   (Stable, Beta, Experimental) and the key it is stored under, and the whole set
   can be turned experimental-on or reset to defaults in one tap.
-- **History** — its own page (`focus://history`), not a settings row: visits
-  grouped by day with Today and Yesterday headings, live counts of visits, sites
-  and today's pages, a search field, swipe-to-delete, a long-press menu to open
-  in a new tab, open here or copy the address, and Clear All behind a
-  confirmation. History is written to Application Support as JSON and capped at
-  5,000 visits. Incognito never records anything.
-- **A rebuilt interface** — a floating glass command bar with the shield, the
-  address and the reload control on one line and the actions on the next; a
-  drag-to-lift gesture for the bar; a redesigned tab switcher with a New Tab tile
-  and thumbnails; a start page with a mark, a big search field, shortcut tiles,
-  the pages you read recently and a privacy card; and an iPad layout with a
-  branded sidebar and a floating toolbar.
+- **History** — its own page (`focus://history`), opened inside the tab like
+  any other page, not as a sheet: visits grouped by day, live counts of visits,
+  sites and today's pages, a search field, and deletion at every scale — one
+  visit by swiping or from its menu, one whole day from the day's header, one
+  site's entire trail from the visit's menu, or everything from the page menu.
+  Nothing is capped or trimmed: every visit is kept until it is deleted.
+  Incognito never records anything.
+- **Flags** — also a page (`focus://flags`), with the same header and back
+  button: eleven switches grouped into Appearance, Browsing, Privacy and
+  Advanced, filterable, each showing its stage (Stable, Beta, Experimental) and
+  the key it is stored under, with enable-all-experimental and reset in one tap.
+- **A decorated start page** — a layered wash with accent glow, a greeting that
+  follows the time of day, a live clock, a favorites grid you add to from the
+  page and long-press to prune, the other open tabs to jump back into, the pages
+  you read last, one-tap History, Flags, Private and Settings tiles, and a
+  session read-out. Every one of those blocks can be switched off in Settings.
 - **Browsing that is saved** — normal browsing uses the persistent store, so
   history, sign-ins and site data survive relaunches, and tabs are restored when
   the app starts again. The erase button wipes everything on demand.
@@ -74,8 +78,8 @@ page.
 
 | Address | Opens |
 | --- | --- |
-| `focus://flags` | The Flags page |
-| `focus://history` | The History page |
+| `focus://flags` | The Flags page, inside the tab |
+| `focus://history` | The History page, inside the tab |
 | `focus://start` | A new tab |
 
 `about:flags` and `about:history` work too. Typing the bare word still searches,
