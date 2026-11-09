@@ -1,8 +1,8 @@
 # Focus Plus
 
-A private, feature-rich browser for iPhone and iPad from **ProjectBySketch™** —
-proprietary and closed source. It grew out of Focus Lite's engine and adds its
-own interface, a dedicated History page, a Flags page, and a much richer start
+A feature-rich, MIT-licensed browser for iPhone and iPad from
+**ProjectBySketch™**. It grew out of Focus Lite's engine and adds its own
+interface, a dedicated History page, a Flags page, and a much richer start
 page.
 
 ## What's in it
@@ -103,21 +103,18 @@ so nothing is taken away from the address bar.
 
 ## Building
 
-This repository carries no source: Focus Plus is closed source, so the app's
-code, project file and assets live only on the build machines and never enter
-version control. What is kept here is the product README, the licence and the
-CI workflow that archives the app when the source is present.
-
+Open the project and run, or use the Run button in the app this chat lives in.
 Targets iOS 26; no third-party dependencies beyond the bundled fengari VM.
 The alternate "Minimal" app icon is compiled in through the
 `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` build setting.
 
-**CI:** `.github/workflows/build-ipa.yml` builds a Release archive and uploads
-an unsigned `FocusPlus.ipa` as a build artifact. It publishes nothing; re-sign
-the IPA with your own certificate to install it on a device.
+**CI:** the *Build IPA* workflow archives a Release build on every push that
+touches the app (and on demand from the Actions tab), uploads an unsigned
+`FocusPlus.ipa` as a run artifact, and attaches the same IPA to the GitHub
+release tagged with the app's version (`v1.0`). Re-sign it with your own
+certificate to install it on a device.
 
 ## License
 
-Proprietary — see [LICENSE](LICENSE). All rights reserved. The MIT notice of
-the project Focus Plus is derived from is kept in
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+MIT — see [LICENSE](LICENSE). Focus Plus is forked from Focus Lite, whose MIT
+notice is kept in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

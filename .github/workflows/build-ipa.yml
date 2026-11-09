@@ -3,10 +3,11 @@ name: Build IPA
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, preview]
     paths:
       - "Focus Plus.xcodeproj/**"
       - "Focus Plus/**"
+      - ".github/workflows/build-ipa.yml"
 
 permissions:
   contents: write
