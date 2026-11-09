@@ -27,10 +27,11 @@
 		0A0000000000000000000003 /* Focus Plus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Focus Plus.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A0000000000000000000023 /* Focus PlusTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Focus PlusTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A0000000000000000000033 /* Focus PlusUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Focus PlusUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5DF75879F43CF05C4C2C04A /* Focus Plus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = "Focus Plus.entitlements"; path = "Focus Plus/Focus Plus.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0A0000000000000000000011 /* Exceptions for "Focus Plus" folder in "Focus Plus" target */ = {
+		0A0000000000000000000011 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -43,7 +44,7 @@
 		0A0000000000000000000005 /* Focus Plus */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0A0000000000000000000011 /* Exceptions for "Focus Plus" folder in "Focus Plus" target */,
+				0A0000000000000000000011 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = "Focus Plus";
 			sourceTree = "<group>";
@@ -92,6 +93,7 @@
 				0A0000000000000000000025 /* Focus PlusTests */,
 				0A0000000000000000000035 /* Focus PlusUITests */,
 				0A0000000000000000000004 /* Products */,
+				D5DF75879F43CF05C4C2C04A /* Focus Plus.entitlements */,
 			);
 			sourceTree = "<group>";
 		};
@@ -404,8 +406,10 @@
 		0A000000000000000000000F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = Minimal;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Focus Plus/Focus Plus.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -422,7 +426,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.organizationName.Focus-Plus";
+				PRODUCT_BUNDLE_IDENTIFIER = com.projectbysketch.Focusplus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -437,8 +441,10 @@
 		0A0000000000000000000010 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = Minimal;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Focus Plus/Focus Plus.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
@@ -455,7 +461,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.organizationName.Focus-Plus";
+				PRODUCT_BUNDLE_IDENTIFIER = com.projectbysketch.Focusplus;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
