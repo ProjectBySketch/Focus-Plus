@@ -400,12 +400,6 @@ struct SettingsSheet: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Section("Developers note") {
-                    Text("I like to code stuff because I feel little interest fot stock ios for it's a little flat and unpleasent I just see everyone making cool stuff for it codding cool PoCs and just wipping the floor with the sandbox it just makes me think woa I want to do that once I get skilled enough to apple better watch out")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
                 Section {
                     HStack(spacing: 4) {
                         Spacer()
