@@ -24,3 +24,11 @@ DerivedData/
 .env
 *.p12
 *.mobileprovision
+
+# The product's source stays out of this repository: Focus Plus is closed
+# source and only the README, the licence notices and the workflow are kept.
+/Focus Plus/
+/Focus Plus.xcodeproj/
+/Focus PlusTests/
+/Focus PlusUITests/
+/.local-source/

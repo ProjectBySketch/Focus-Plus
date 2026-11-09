@@ -96,7 +96,11 @@ so nothing is taken away from the address bar.
 
 ## Building
 
-Open the project and run, or use the Run button in the app this chat lives in.
+This repository carries no source: Focus Plus is closed source, so the app's
+code, project file and assets live only on the build machines and never enter
+version control. What is kept here is the product README, the licence and the
+CI workflow that archives the app when the source is present.
+
 Targets iOS 26; no third-party dependencies beyond the bundled fengari VM.
 The alternate "Minimal" app icon is compiled in through the
 `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` build setting.
