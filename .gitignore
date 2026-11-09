@@ -25,10 +25,8 @@ DerivedData/
 *.p12
 *.mobileprovision
 
-# The product's source stays out of this repository: Focus Plus is closed
-# source and only the README, the licence notices and the workflow are kept.
-/Focus Plus/
-/Focus Plus.xcodeproj/
-/Focus PlusTests/
-/Focus PlusUITests/
-/.local-source/
+# The product's source is deliberately not tracked: Focus Plus is closed source
+# and the repository keeps only the README, the licence notices and the
+# workflow. Those files are left untracked rather than ignored, because the
+# build tooling syncs the working tree and needs to see them — never add them
+# to a commit.
