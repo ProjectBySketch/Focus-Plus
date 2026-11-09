@@ -620,6 +620,7 @@ private struct TabSwitcher: View {
 
     private var header: some View {
         HStack(spacing: 10) {
+            AppLogo(style: .tile, size: 26)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Tabs")
                     .font(.title3.bold())
