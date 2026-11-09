@@ -25,7 +25,6 @@ struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var subSheet: SettingsSubSheet?
     @State private var vpnPassword = ""
-    @State private var activeIcon: String? = UIApplication.shared.alternateIconName
     @ObservedObject private var favorites = FavoritesStore.shared
     @State private var showAddFavorite = false
     @State private var newFavoriteTitle = ""
@@ -241,17 +240,6 @@ struct SettingsSheet: View {
                     Text("Customize")
                 } footer: {
                     Text("The accent colors the interface, the engine the address bar sends searches to, and the zoom of every page. The homepage opens in tabs created afterwards. A custom search template is an http(s) URL containing %s where the search term goes. Focus Search is Focus Plus's own engine and the default: it loads a clean results page with Web and Images tabs right in the tab, and its optional domain verification uses the encrypted DNS resolver chosen in Privacy. Minimalistic mode hides the start-page shortcuts and the incognito and erase buttons — those stay available in Settings. These choices are saved on this device.")
-                }
-
-                Section {
-                    HStack(spacing: 12) {
-                        iconButton(title: "Default", symbol: "shield.lefthalf.filled", name: nil)
-                        iconButton(title: "Minimal", symbol: "shield", name: "Minimal")
-                    }
-                } header: {
-                    Text("App icon")
-                } footer: {
-                    Text("The icon shown on the Home Screen. iOS asks for confirmation in its own dialog before the icon changes.")
                 }
 
                 Section {
@@ -525,35 +513,6 @@ struct SettingsSheet: View {
                 Text(preset.displayName)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(selected ? Theme.accent : .secondary)
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Switches between the bundled icons. iOS itself asks the user to confirm
-/// the change, so the completion only refreshes which tile is marked active.
-    private func iconButton(title: String, symbol: String, name: String?) -> some View {
-        Button {
-            guard UIApplication.shared.supportsAlternateIcons else { return }
-            UIApplication.shared.setAlternateIconName(name) { _ in
-                activeIcon = UIApplication.shared.alternateIconName
-            }
-        } label: {
-            VStack(spacing: 8) {
-                Image(systemName: symbol)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(activeIcon == name ? Theme.accent : .secondary)
-                    .frame(maxWidth: .infinity, minHeight: 64)
-                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(
-                                activeIcon == name ? Theme.accent.opacity(0.6) : Color.white.opacity(0.08),
-                                lineWidth: activeIcon == name ? 2 : 1
-                            )
-                    )
-                Text(title)
-                    .font(.subheadline)
             }
         }
         .buttonStyle(.plain)

@@ -57,8 +57,8 @@ page.
   background scripts, `storage.local`/`sync` and runtime messaging, in isolated
   worlds. Lua is a first-class option through an embedded Lua 5.3 VM.
 - **Customization** — accent colour (Purple by default), search engine (or a
-  custom template), homepage for new tabs, page zoom, minimalistic mode and the
-  alternate app icon, all saved on device. The phone's command bar sits where
+  custom template), homepage for new tabs, page zoom and minimalistic mode, all
+  saved on device. The phone's command bar sits where
   you preset it — top or bottom, no dragging — and can tuck itself away while
   you scroll, coming back on the way up; it always steps aside for the keyboard
   so the space bar is never covered. Settings also has a Start page section
@@ -111,8 +111,6 @@ so nothing is taken away from the address bar.
 
 Open the project and run, or use the Run button in the app this chat lives in.
 Targets iOS 26; no third-party dependencies beyond the bundled fengari VM.
-The alternate "Minimal" app icon is compiled in through the
-`ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` build setting.
 
 **CI:** the *Build IPA* workflow archives a Release build on every push that
 touches the app (and on demand from the Actions tab), uploads an unsigned

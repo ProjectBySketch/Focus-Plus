@@ -263,11 +263,12 @@ struct AddressField: View {
     @ObservedObject private var flags = FlagsStore.shared
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             shield
 
             TextField("Search or enter address", text: $model.addressText)
                 .textFieldStyle(.plain)
+                .font(.system(size: 15))
                 .submitLabel(.go)
                 .focused(addressFocused)
                 .autocorrectionDisabled()
@@ -286,18 +287,25 @@ struct AddressField: View {
 
             if addressFocused.wrappedValue && !model.addressText.isEmpty {
                 Button {
-                    model.addressText = ""
+                    withAnimation(.snappy(duration: 0.18)) { model.addressText = "" }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white.opacity(0.35))
                 }
                 .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.hairline))
+        .padding(.horizontal, 14)
+        .frame(height: 44)
+        .background(Theme.surface, in: Capsule())
+        .overlay(Capsule().strokeBorder(borderColor))
+        .animation(.snappy(duration: 0.18), value: addressFocused.wrappedValue)
+    }
+
+    private var borderColor: Color {
+        addressFocused.wrappedValue ? Theme.accent.opacity(0.55) : Color.white.opacity(0.06)
     }
 
     private var shield: some View {
@@ -308,23 +316,23 @@ struct AddressField: View {
                 if flags.isEnabled(.shieldCounter) && model.trackersSeen > 0 {
                     HStack(spacing: 3) {
                         Image(systemName: "shield.lefthalf.filled")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 9, weight: .bold))
                         Text("\(model.trackersSeen)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
                             .monospacedDigit()
                     }
                     .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 7)
-                    .frame(height: 22)
-                    .background(Theme.accent.opacity(0.18), in: Capsule())
+                    .frame(height: 20)
+                    .background(Theme.accent.opacity(0.16), in: Capsule())
                 } else {
                     Image(systemName: model.isStart ? "magnifyingglass" : "lock.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 22, height: 22)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .frame(width: 20, height: 20)
                 }
             }
-            .frame(height: 22)
+            .frame(height: 20)
         }
         .buttonStyle(.plain)
     }
@@ -340,10 +348,10 @@ private struct ChromeIcon: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: symbol)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(tint ?? .white)
-                .frame(width: 40, height: 34)
-                .opacity(dimmed ? 0.35 : 1)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(tint ?? .white.opacity(0.9))
+                .frame(width: 40, height: 32)
+                .opacity(dimmed ? 0.3 : 1)
             if let badge, badge > 1 {
                 Text("\(badge)")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
@@ -463,9 +471,15 @@ private struct PhoneChrome: View {
                              addressFocused: addressFocused)
                 if !model.isStart {
                     Button(action: model.toggleReload) {
-                        ChromeIcon(symbol: model.isLoading ? "xmark" : "arrow.clockwise")
+                        Image(systemName: model.isLoading ? "xmark" : "arrow.clockwise")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .frame(width: 44, height: 44)
+                            .background(Theme.surface, in: Circle())
+                            .overlay(Circle().strokeBorder(Color.white.opacity(0.06)))
                     }
                     .buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 }
             }
 
@@ -508,12 +522,14 @@ private struct PhoneChrome: View {
     }
 
     private var actionRow: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 0) {
             Button(action: model.goBack) {
                 ChromeIcon(symbol: "chevron.left", dimmed: !model.canGoBack)
             }
             .buttonStyle(.plain)
             .disabled(!model.canGoBack)
+
+            Spacer(minLength: 0)
 
             Button {
                 withAnimation(Theme.animation) { manager.openTabSwitcher() }
@@ -522,12 +538,16 @@ private struct PhoneChrome: View {
             }
             .buttonStyle(.plain)
 
+            Spacer(minLength: 0)
+
             Button {
                 manager.enterHistory()
             } label: {
                 ChromeIcon(symbol: "clock.arrow.circlepath")
             }
             .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
 
             Button {
                 manager.enterFlags()
@@ -536,11 +556,11 @@ private struct PhoneChrome: View {
             }
             .buttonStyle(.plain)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 0)
 
             menuButton
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 2)
     }
 
     private var menuButton: some View {

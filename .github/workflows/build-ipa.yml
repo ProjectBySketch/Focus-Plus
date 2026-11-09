@@ -40,8 +40,7 @@ jobs:
             archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES=Minimal
+            CODE_SIGNING_REQUIRED=NO
 
       - name: Package unsigned IPA
         run: |
