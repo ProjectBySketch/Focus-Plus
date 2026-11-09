@@ -297,8 +297,8 @@ struct AddressField: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
-        .padding(.horizontal, 14)
-        .frame(height: 44)
+        .padding(.horizontal, 13)
+        .frame(height: 38)
         .background(Theme.surface, in: Capsule())
         .overlay(Capsule().strokeBorder(borderColor))
         .animation(.snappy(duration: 0.18), value: addressFocused.wrappedValue)
@@ -350,7 +350,7 @@ private struct ChromeIcon: View {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(tint ?? .white.opacity(0.9))
-                .frame(width: 40, height: 32)
+                .frame(width: 38, height: 30)
                 .opacity(dimmed ? 0.3 : 1)
             if let badge, badge > 1 {
                 Text("\(badge)")
@@ -472,9 +472,9 @@ private struct PhoneChrome: View {
                 if !model.isStart {
                     Button(action: model.toggleReload) {
                         Image(systemName: model.isLoading ? "xmark" : "arrow.clockwise")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.white.opacity(0.9))
-                            .frame(width: 44, height: 44)
+                            .frame(width: 38, height: 38)
                             .background(Theme.surface, in: Circle())
                             .overlay(Circle().strokeBorder(Color.white.opacity(0.06)))
                     }
