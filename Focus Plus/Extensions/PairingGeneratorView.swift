@@ -72,13 +72,13 @@ struct PairingGeneratorView: View {
                 }
 
                 Section {
-                    Text("A pairing file is written at the end of the encrypted half of this handshake: the app has to present a host certificate to the phone and sign the record with it. iOS gives an app no way to turn a key it generated into a SecIdentity, so that step needs a TLS stack the app does not bundle — the same reason SideStore and StikDebug ship one.")
+                    Text("Focus Plus runs the whole lockdown handshake here: it introduces itself to the phone, reads it, generates a host certificate with OpenSSL, starts the encrypted session and asks the phone to write the pairing record. The finished record is sealed with the app's Keychain key and stored where only this app can read it — nothing is uploaded.")
                         .font(.footnote)
-                    Text("Use their generator for the record (SideStore → Settings → Pairing file, or the StikDebug helper), then add it with “Add pairing file…” on this page. It is the same record these handshake steps are leading to.")
+                    Text("This needs the JIT tunnel running on this device, because that is what reaches the phone's lockdown service. If the handshake stops, the log above names the step that refused it. A record made by SideStore or the StikDebug helper can still be added with “Add pairing file…”.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } header: {
-                    Text("Where the record comes from")
+                    Text("What this does")
                 }
             }
             .navigationTitle("Pairing file")

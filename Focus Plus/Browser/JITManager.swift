@@ -103,6 +103,17 @@ final class JITManager: ObservableObject {
         guard let data = try? Data(contentsOf: url), !data.isEmpty else {
             return .failure(.unreadable)
         }
+        return importPairingData(data)
+    }
+
+    /// Stores a record produced by the in-app generator exactly as it stores
+    /// one read from a file: validated, sealed with the Keychain key and
+    /// written where only this app can read it.
+    @discardableResult
+    func importPairingData(_ data: Data) -> Result<JITPairing, JITPairingError> {
+        guard !data.isEmpty else {
+            return .failure(.unreadable)
+        }
         guard let plist = (try? PropertyListSerialization.propertyList(from: data, format: nil))
             as? [String: Any] else {
             return .failure(.notAPairingFile)

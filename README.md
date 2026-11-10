@@ -77,16 +77,14 @@ page.
   DuckDuckGo's key-less autocomplete endpoint for completions as you type,
   over an ephemeral session with a short debounce, and offer a real address
   first when what you typed looks like a domain. Nothing is stored.
-- **JIT & Pairing (optional)** — Settings can hold the phone's
-  `.mobiledevicepairing` file, sealed with the app's own Keychain key, and
-  reports whether a StikDebug-style local tunnel is listening. A pairing-file
-  page reads the phone through that tunnel — the lockdown handshake, the device
-  name, model, iOS version and UDID, and whether the phone wants TLS for
-  pairing — so the tunnel can be checked before anything is installed. The
-  record itself is written at the encrypted end of that handshake, which needs a
-  TLS stack the app does not bundle, so it is generated with SideStore or the
-  StikDebug helper and imported here. Nothing is uploaded, and removing the
-  pairing file deletes it from the device.
+- **JIT & Pairing (optional)** — Focus Plus generates the phone's
+  `.mobiledevicepairing` record itself: it speaks the lockdown handshake
+  through the local JIT tunnel, reads the device name, model, iOS version and
+  UDID, generates a host certificate with OpenSSL, starts the encrypted session
+  and asks the phone to write the record, which is then sealed with the app's
+  own Keychain key. A record made elsewhere can still be imported, the tunnel's
+  reachability is reported before anything is installed, and removing the
+  pairing file deletes it from the device. Nothing is uploaded.
 
 ## Internal pages
 
@@ -115,7 +113,9 @@ so nothing is taken away from the address bar.
 ## Building
 
 Open the project and run, or use the Run button in the app this chat lives in.
-Targets iOS 26; no third-party dependencies beyond the bundled fengari VM.
+Targets iOS 26. One dependency: OpenSSL (Swift Package, by Marcin Krzyżanowski),
+used by the pairing-file generator for the host certificate and the tunnel's
+encrypted session. The fengari Lua VM ships in the app bundle.
 
 **CI:** the *Build IPA* workflow archives a Release build on every push that
 touches the app (and on demand from the Actions tab), uploads an unsigned
