@@ -79,9 +79,14 @@ page.
   first when what you typed looks like a domain. Nothing is stored.
 - **JIT & Pairing (optional)** — Settings can hold the phone's
   `.mobiledevicepairing` file, sealed with the app's own Keychain key, and
-  reports whether a StikDebug-style local tunnel is listening. Focus Plus never
-  opens a tunnel itself and never uploads the pairing record; removing it
-  deletes it from the device.
+  reports whether a StikDebug-style local tunnel is listening. A pairing-file
+  page reads the phone through that tunnel — the lockdown handshake, the device
+  name, model, iOS version and UDID, and whether the phone wants TLS for
+  pairing — so the tunnel can be checked before anything is installed. The
+  record itself is written at the encrypted end of that handshake, which needs a
+  TLS stack the app does not bundle, so it is generated with SideStore or the
+  StikDebug helper and imported here. Nothing is uploaded, and removing the
+  pairing file deletes it from the device.
 
 ## Internal pages
 

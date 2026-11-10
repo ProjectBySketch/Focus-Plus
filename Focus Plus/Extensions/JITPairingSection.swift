@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 struct JITPairingSection: View {
     @ObservedObject private var jit = JITManager.shared
     @State private var showPicker = false
+    @State private var showGenerator = false
     @State private var message: String?
     @State private var messageIsError = false
 
@@ -30,6 +31,12 @@ struct JITPairingSection: View {
             } label: {
                 Label(jit.isPaired ? "Replace pairing file…" : "Add pairing file…",
                       systemImage: "doc.badge.plus")
+            }
+
+            Button {
+                showGenerator = true
+            } label: {
+                Label("Generate a pairing file…", systemImage: "wand.and.stars")
             }
 
             if jit.isPaired {
@@ -56,6 +63,9 @@ struct JITPairingSection: View {
             Text("JIT & Pairing")
         } footer: {
             Text("Optional. Add the .mobiledevicepairing file exported for this phone — the same pairing record a debug build uses — and Focus Plus keeps it sealed with the app's own Keychain key. JIT itself is handed over by a local tunnel such as StikDebug running on this device, listening on \(JITManager.tunnelHost):\(String(JITManager.tunnelPort)); Focus Plus only checks that it is up and never opens one itself. Nothing is uploaded, and removing the pairing file deletes it from this device.")
+        }
+        .sheet(isPresented: $showGenerator) {
+            PairingGeneratorView()
         }
         .fileImporter(
             isPresented: $showPicker,
