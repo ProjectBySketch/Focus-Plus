@@ -4,12 +4,14 @@
 //
 
 import SwiftUI
+import UIKit
 
 /// Large-screen layout for iPad: a persistent tab sidebar beside the page,
 /// with the browser controls in a bar above the content.
 struct IPadBrowserLayout: View {
     @ObservedObject var manager: TabManager
     @ObservedObject private var flags = FlagsStore.shared
+    @ObservedObject private var customization = CustomizationStore.shared
     @FocusState private var addressFocused: Bool
     @State private var showTrackerTip = false
 
@@ -34,6 +36,14 @@ struct IPadBrowserLayout: View {
                 }
 
                 TabContentView(manager: manager)
+                    .overlay(alignment: .top) {
+                        if let model = manager.activeTab?.model, model.isFinding {
+                            FindBar(model: model)
+                                .padding(.horizontal, 14)
+                                .padding(.top, 8)
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+                    }
 
                 if showTrackerTip, let model = manager.activeTab?.model {
                     TrackerTip(model: model)
@@ -158,7 +168,7 @@ struct IPadBrowserLayout: View {
 
     private var topBar: some View {
         VStack(spacing: 8) {
-            if let model = manager.activeTab?.model {
+            if customization.showProgressBar, let model = manager.activeTab?.model {
                 ProgressBar(model: model)
             }
 
@@ -175,6 +185,14 @@ struct IPadBrowserLayout: View {
 
                         Button(action: model.toggleReload) {
                             Image(systemName: model.isLoading ? "xmark" : "arrow.clockwise")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            model.beginFinding()
+                        } label: {
+                            Image(systemName: "text.magnifyingglass")
                                 .font(.system(size: 15, weight: .semibold))
                         }
                         .buttonStyle(.plain)
@@ -203,6 +221,43 @@ struct IPadBrowserLayout: View {
                             .font(.system(size: 15, weight: .semibold))
                     }
                     .buttonStyle(.plain)
+
+                    Menu {
+                        Button {
+                            model.beginFinding()
+                        } label: {
+                            Label("Find on Page", systemImage: "text.magnifyingglass")
+                        }
+                        if let url = model.displayedURL {
+                            ShareLink(item: url) {
+                                Label("Share Page", systemImage: "square.and.arrow.up")
+                            }
+                            Button {
+                                UIPasteboard.general.string = url.absoluteString
+                            } label: {
+                                Label("Copy Link", systemImage: "doc.on.doc")
+                            }
+                            Button {
+                                FavoritesStore.shared.add(title: model.pageTitle,
+                                                          url: url.absoluteString)
+                            } label: {
+                                Label("Add to Favorites", systemImage: "star")
+                            }
+                            Button {
+                                model.requestsDesktopSite.toggle()
+                            } label: {
+                                Label(model.requestsDesktopSite
+                                        ? "Request Mobile Site"
+                                        : "Request Desktop Site",
+                                      systemImage: model.requestsDesktopSite
+                                        ? "iphone"
+                                        : "desktopcomputer")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
                 }
             }
         }

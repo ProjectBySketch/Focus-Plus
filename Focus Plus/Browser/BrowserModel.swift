@@ -29,6 +29,29 @@ final class BrowserModel: NSObject, ObservableObject {
     /// How far the page is scrolled, so the command bar can tuck itself away
     /// while reading and come back on the way up.
     @Published private(set) var scrollOffset: CGFloat = 0
+    /// In-page find: whether the bar is up, what is typed in it, and what the
+    /// page answered. WebKit's own `window.find` does the matching, so the
+    /// highlight and its behaviour are the browser's own.
+    @Published var isFinding = false
+    @Published var findQuery = ""
+    @Published private(set) var findFeedback: String?
+    /// Whether pages are asked for as the desktop version. WebKit's own user
+    /// agent is swapped for a desktop Safari one and the page reloads, so the
+    /// change lands immediately instead of on the next navigation.
+    @Published var requestsDesktopSite = false {
+        didSet {
+            guard oldValue != requestsDesktopSite else { return }
+            webView.customUserAgent = requestsDesktopSite ? Self.desktopUserAgent : nil
+            if !isStart, displayedURL != nil {
+                webView.reload()
+            }
+        }
+    }
+
+    /// A desktop Safari identity: the string sites read to decide which
+    /// version of themselves to serve.
+    static let desktopUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        + "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
     /// Called on the main thread each time a page finishes loading, so the
     /// tab manager can keep session-wide stats.
     var onPageLoaded: (() -> Void)?
@@ -493,6 +516,64 @@ final class BrowserModel: NSObject, ObservableObject {
                 BrowserLogStore.shared.record("Focus search · \(fetched.count) results total")
             }
         }
+    }
+
+    // MARK: - Find on page
+
+    func beginFinding() {
+        isFinding = true
+        findFeedback = nil
+    }
+
+    /// Puts the page back the way it was: the selection is dropped so the last
+    /// match stops being highlighted.
+    func endFinding() {
+        isFinding = false
+        findQuery = ""
+        findFeedback = nil
+        webView.evaluateJavaScript(
+            "window.getSelection && window.getSelection().removeAllRanges();",
+            in: nil, in: .page
+        ) { _ in }
+    }
+
+    /// Moves to the next (or previous) match. `window.find` scrolls the match
+    /// into view and wraps around the page, and its answer tells the bar
+    /// whether the term was there at all.
+    func findNext(backwards: Bool = false) {
+        let term = findQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !term.isEmpty else {
+            findFeedback = nil
+            return
+        }
+        guard !isStart else {
+            findFeedback = "Nothing to search yet"
+            return
+        }
+        let direction = backwards ? "true" : "false"
+        let script = "(function(){try{return window.find(\"\(Self.jsEscaped(term))\",false,\(direction),true,false,false,false);}catch(e){return false;}})()"
+        webView.evaluateJavaScript(script, in: nil, in: .page) { [weak self] result in
+            guard let self else { return }
+            var found = false
+            if case .success(let value) = result {
+                if let flag = value as? Bool {
+                    found = flag
+                } else if let number = value as? NSNumber {
+                    found = number.boolValue
+                }
+            }
+            self.findFeedback = found ? nil : "No matches"
+        }
+    }
+
+    /// A term is pasted into a script, so quotes and backslashes have to be
+    /// escaped rather than trusted.
+    private static func jsEscaped(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "")
     }
 
     func toggleReload() {

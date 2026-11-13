@@ -119,11 +119,20 @@ struct BrowserView: View {
                  ? "Cookies and website sign-ins are set to stay on this device. Keep them, or wipe them along with the history."
                  : "Cookies and sign-ins die with every session. You can start keeping them instead.")
         }
+        .onChange(of: manager.pagesVisited) { _, _ in
+            // With automatic JIT on, each finished page re-checks the tunnel,
+            // so its state never goes stale between manual checks.
+            guard JITManager.shared.enableAutomatically else { return }
+            Task { await JITManager.shared.checkTunnelIfPaired() }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                     manager.captureTabPreviews()
                 }
+                // Coming back to the app is the moment the companion tunnel is
+                // most likely to have just been started.
+                Task { await JITManager.shared.checkTunnelIfPaired() }
             } else {
                 manager.clearTabPreviews()
             }
@@ -365,6 +374,71 @@ private struct ChromeIcon: View {
     }
 }
 
+// MARK: - Find on page
+
+/// The in-page find bar: a compact capsule at the top of the page, with the
+/// next and previous match and a way out. The matching is WebKit's own, so the
+/// highlight, the wrap-around and the scroll-into-view are the browser's own.
+struct FindBar: View {
+    @ObservedObject var model: BrowserModel
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: "text.magnifyingglass")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+
+            TextField("Find on page", text: $model.findQuery)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .focused($focused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onSubmit { model.findNext() }
+                .onChange(of: model.findQuery) { _, _ in model.findNext() }
+
+            if let feedback = model.findFeedback {
+                Text(feedback)
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+            }
+
+            Button { model.findNext(backwards: true) } label: {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+
+            Button { model.findNext() } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                withAnimation(.snappy(duration: 0.2)) { model.endFinding() }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+        }
+        .foregroundStyle(.white.opacity(0.9))
+        .padding(.horizontal, 14)
+        .frame(height: 42)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.hairline))
+        .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
+        .onAppear { focused = true }
+    }
+}
+
 // MARK: - Phone layout
 
 struct PhoneBrowserLayout: View {
@@ -412,8 +486,18 @@ struct PhoneBrowserLayout: View {
                     .transition(.opacity)
                     .zIndex(1)
             }
+
+            if let model = manager.activeTab?.model, model.isFinding {
+                FindBar(model: model)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(2)
+            }
         }
         .animation(Theme.animation, value: manager.showTabSwitcher)
+        .animation(Theme.animation, value: manager.activeTab?.model.isFinding)
         .animation(.snappy(duration: 0.28), value: tucked)
         .onChange(of: manager.showTabSwitcher) { _, isShowing in
             if !isShowing { manager.clearTabPreviews() }
@@ -452,6 +536,7 @@ struct PhoneBrowserLayout: View {
 private struct PhoneChrome: View {
     @ObservedObject var manager: TabManager
     @ObservedObject var model: BrowserModel
+    @ObservedObject private var customization = CustomizationStore.shared
     @Binding var showTrackerTip: Bool
     var addressFocused: FocusState<Bool>.Binding
     let floating: Bool
@@ -461,7 +546,7 @@ private struct PhoneChrome: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            if !top {
+            if !top && customization.showProgressBar {
                 ProgressBar(model: model)
                     .padding(.horizontal, 4)
             }
@@ -569,6 +654,34 @@ private struct PhoneChrome: View {
                 withAnimation(Theme.animation) { _ = manager.addTab() }
             } label: {
                 Label("New Tab", systemImage: "plus.square")
+            }
+            if !model.isStart {
+                Button {
+                    withAnimation(Theme.animation) { model.beginFinding() }
+                } label: {
+                    Label("Find on Page", systemImage: "text.magnifyingglass")
+                }
+            }
+            if let url = model.displayedURL {
+                ShareLink(item: url) {
+                    Label("Share Page", systemImage: "square.and.arrow.up")
+                }
+                Button {
+                    UIPasteboard.general.string = url.absoluteString
+                } label: {
+                    Label("Copy Link", systemImage: "doc.on.doc")
+                }
+                Button {
+                    FavoritesStore.shared.add(title: model.pageTitle, url: url.absoluteString)
+                } label: {
+                    Label("Add to Favorites", systemImage: "star")
+                }
+                Button {
+                    model.requestsDesktopSite.toggle()
+                } label: {
+                    Label(model.requestsDesktopSite ? "Request Mobile Site" : "Request Desktop Site",
+                          systemImage: model.requestsDesktopSite ? "iphone" : "desktopcomputer")
+                }
             }
             Button {
                 manager.enterHistory()

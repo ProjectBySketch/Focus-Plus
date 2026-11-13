@@ -10,7 +10,7 @@ import SwiftUI
 /// own choice. Christmas is one preset among them, so the festive look is
 /// never forced on anyone and every other look stays just as complete.
 enum ThemePreset: String, CaseIterable, Identifiable {
-    case midnight, evergreen, aurora, sand, mono, ocean
+    case midnight, evergreen, aurora, ocean, plum, ember, sand, mono
 
     var id: String { rawValue }
 
@@ -19,9 +19,11 @@ enum ThemePreset: String, CaseIterable, Identifiable {
         case .midnight: return "Midnight"
         case .evergreen: return "Christmas"
         case .aurora: return "Aurora"
+        case .ocean: return "Ocean"
+        case .plum: return "Plum"
+        case .ember: return "Ember"
         case .sand: return "Sand"
         case .mono: return "Mono"
-        case .ocean: return "Ocean"
         }
     }
 
@@ -30,9 +32,11 @@ enum ThemePreset: String, CaseIterable, Identifiable {
         case .midnight: return "Deep indigo, quiet and neutral."
         case .evergreen: return "Pine green, falling snow, a holiday greeting."
         case .aurora: return "Indigo into teal, like a night sky."
+        case .ocean: return "Cold blue, deep and calm."
+        case .plum: return "Deep violet with a rosy cast."
+        case .ember: return "Warm firelight for reading at night."
         case .sand: return "Warm earth tones for daylight reading."
         case .mono: return "Graphite with no colour cast at all."
-        case .ocean: return "Cold blue, deep and calm."
         }
     }
 
@@ -41,9 +45,11 @@ enum ThemePreset: String, CaseIterable, Identifiable {
         case .midnight: return "moon.stars.fill"
         case .evergreen: return "snowflake"
         case .aurora: return "sparkles"
+        case .ocean: return "water.waves"
+        case .plum: return "circle.hexagongrid.fill"
+        case .ember: return "flame.fill"
         case .sand: return "sun.haze.fill"
         case .mono: return "circle.lefthalf.filled"
-        case .ocean: return "water.waves"
         }
     }
 
@@ -53,9 +59,11 @@ enum ThemePreset: String, CaseIterable, Identifiable {
         case .midnight: return Color(red: 0.11, green: 0.11, blue: 0.27)
         case .evergreen: return Color(red: 0.05, green: 0.21, blue: 0.15)
         case .aurora: return Color(red: 0.10, green: 0.14, blue: 0.34)
+        case .ocean: return Color(red: 0.04, green: 0.18, blue: 0.31)
+        case .plum: return Color(red: 0.24, green: 0.10, blue: 0.30)
+        case .ember: return Color(red: 0.34, green: 0.13, blue: 0.10)
         case .sand: return Color(red: 0.27, green: 0.22, blue: 0.17)
         case .mono: return Color(red: 0.15, green: 0.15, blue: 0.16)
-        case .ocean: return Color(red: 0.04, green: 0.18, blue: 0.31)
         }
     }
 
@@ -64,9 +72,11 @@ enum ThemePreset: String, CaseIterable, Identifiable {
         case .midnight: return Color(red: 0.04, green: 0.04, blue: 0.10)
         case .evergreen: return Color(red: 0.02, green: 0.09, blue: 0.07)
         case .aurora: return Color(red: 0.03, green: 0.20, blue: 0.23)
+        case .ocean: return Color(red: 0.01, green: 0.07, blue: 0.14)
+        case .plum: return Color(red: 0.09, green: 0.03, blue: 0.14)
+        case .ember: return Color(red: 0.14, green: 0.05, blue: 0.05)
         case .sand: return Color(red: 0.12, green: 0.09, blue: 0.07)
         case .mono: return Color(red: 0.05, green: 0.05, blue: 0.06)
-        case .ocean: return Color(red: 0.01, green: 0.07, blue: 0.14)
         }
     }
 
@@ -131,19 +141,21 @@ enum ChromePosition: String, CaseIterable, Identifiable {
 /// The accent colors the app ships with. The raw value is the string the
 /// choice is persisted under.
 enum Accent: String, CaseIterable, Identifiable {
-    case purple, tangerine, coral, amber, mint, sky, violet, rose
+    case purple, violet, indigo, sky, teal, mint, amber, tangerine, coral, rose
 
     var id: String { rawValue }
 
     var color: Color {
         switch self {
         case .purple: return Color(red: 0.61, green: 0.38, blue: 0.99)
+        case .violet: return Color(red: 0.66, green: 0.5, blue: 0.95)
+        case .indigo: return Color(red: 0.38, green: 0.44, blue: 0.98)
+        case .sky: return Color(red: 0.35, green: 0.65, blue: 1.0)
+        case .teal: return Color(red: 0.16, green: 0.76, blue: 0.76)
+        case .mint: return Color(red: 0.34, green: 0.85, blue: 0.6)
+        case .amber: return Color(red: 1.0, green: 0.78, blue: 0.25)
         case .tangerine: return Color(red: 1.0, green: 0.545, blue: 0.235)
         case .coral: return Color(red: 1.0, green: 0.42, blue: 0.42)
-        case .amber: return Color(red: 1.0, green: 0.78, blue: 0.25)
-        case .mint: return Color(red: 0.34, green: 0.85, blue: 0.6)
-        case .sky: return Color(red: 0.35, green: 0.65, blue: 1.0)
-        case .violet: return Color(red: 0.66, green: 0.5, blue: 0.95)
         case .rose: return Color(red: 1.0, green: 0.45, blue: 0.7)
         }
     }
@@ -169,6 +181,15 @@ enum SearchEngine: String, CaseIterable, Identifiable {
         case .ecosia: return "Ecosia"
         case .qwant: return "Qwant"
         case .custom: return "Custom…"
+        }
+    }
+
+    /// The name without the "built-in" tail, for chips and short rows.
+    var shortName: String {
+        switch self {
+        case .focus: return "Focus Search"
+        case .custom: return "Custom"
+        default: return displayName
         }
     }
 
@@ -275,6 +296,16 @@ final class CustomizationStore: ObservableObject {
             defaults.set(startPageSections.map(\.rawValue), forKey: Keys.startPageSections)
         }
     }
+    /// The blurred accent wash behind the start page and the tab switcher.
+    /// Off leaves the plain gradient, which is calmer and cheaper to draw.
+    @Published var showBackdropGlow: Bool {
+        didSet { defaults.set(showBackdropGlow, forKey: Keys.showBackdropGlow) }
+    }
+    /// The thin loading bar above the pages. Off leaves the stop button as the
+    /// only sign that a page is loading.
+    @Published var showProgressBar: Bool {
+        didSet { defaults.set(showProgressBar, forKey: Keys.showProgressBar) }
+    }
 
     private let defaults: UserDefaults
 
@@ -308,7 +339,8 @@ final class CustomizationStore: ObservableObject {
             (storedSections ?? StartPageSection.allCases.map(\.rawValue))
                 .compactMap(StartPageSection.init(rawValue:))
         )
-
+        showBackdropGlow = defaults.object(forKey: Keys.showBackdropGlow) as? Bool ?? true
+        showProgressBar = defaults.object(forKey: Keys.showProgressBar) as? Bool ?? true
     }
 
     private enum Keys {
@@ -327,6 +359,8 @@ final class CustomizationStore: ObservableObject {
         static let themePreset = "customization.themePreset"
         static let verifyDomains = "customization.verifyDomains"
         static let startPageSections = "customization.startPageSections"
+        static let showBackdropGlow = "customization.showBackdropGlow"
+        static let showProgressBar = "customization.showProgressBar"
 
     }
 

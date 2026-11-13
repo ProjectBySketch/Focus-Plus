@@ -5,12 +5,14 @@
 
 import SwiftUI
 
-/// The pairing-file sheet: read the phone through the local tunnel, see what
-/// it says, and get the one step that still has to happen elsewhere — the
-/// encrypted half of the lockdown handshake that writes the record.
+/// The pairing-file sheet: read the phone through the local tunnel, watch the
+/// handshake step by step, and end up with a record this device keeps sealed.
 struct PairingGeneratorView: View {
     @ObservedObject private var generator = PairingGenerator.shared
     @Environment(\.dismiss) private var dismiss
+
+    private var isRunning: Bool { generator.phase == .running }
+    private var didFinish: Bool { generator.phase == .finished }
 
     var body: some View {
         NavigationStack {
@@ -25,20 +27,39 @@ struct PairingGeneratorView: View {
                     Button {
                         Task { await generator.run() }
                     } label: {
-                        if generator.phase == .running {
-                            HStack(spacing: 8) {
+                        if isRunning {
+                            HStack(spacing: 10) {
                                 ProgressView()
-                                Text("Reading the phone…")
+                                Text("Talking to the phone…")
                             }
                         } else {
-                            Label("Read the phone over the tunnel", systemImage: "antenna.radiowaves.left.and.right")
+                            Label(didFinish ? "Generate again" : "Pair through the tunnel",
+                                  systemImage: "antenna.radiowaves.left.and.right")
                         }
                     }
-                    .disabled(generator.phase == .running)
+                    .disabled(isRunning)
                 } header: {
                     Text("Tunnel")
                 } footer: {
-                    Text("Point this at the local tunnel a JIT helper such as StikDebug opens on this device. Focus Plus only speaks to it on localhost — nothing leaves the phone.")
+                    Text("The local tunnel a JIT helper such as StikDebug opens on this device. The address is shared with the JIT page, so both always agree. Focus Plus only speaks to it on localhost.")
+                }
+
+                if didFinish, let saved = generator.savedPairing {
+                    Section {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(Theme.accent)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Paired with \(saved.displayName)")
+                                    .font(.subheadline.weight(.semibold))
+                                Text("The record is sealed and switched on.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
                 }
 
                 if let device = generator.device {
@@ -48,7 +69,7 @@ struct PairingGeneratorView: View {
                         LabeledContent("iOS", value: device.systemVersion ?? "—")
                         LabeledContent("Build", value: device.build ?? "—")
                         LabeledContent("UDID", value: device.udid ?? "—")
-                        LabeledContent("TLS for pairing",
+                        LabeledContent("Encrypted session",
                                        value: generator.wantsEncryptedSession ? "Required" : "Not required")
                     }
                 }
@@ -68,15 +89,16 @@ struct PairingGeneratorView: View {
                         Text(message)
                             .font(.footnote)
                             .foregroundStyle(.red)
+                    } header: {
+                        Text("Stopped")
+                    } footer: {
+                        Text("The log above names the step that refused. A record made by SideStore or the StikDebug helper can still be added with “Add a pairing file…”.")
                     }
                 }
 
                 Section {
-                    Text("Focus Plus runs the whole lockdown handshake here: it introduces itself to the phone, reads it, generates a host certificate with OpenSSL, starts the encrypted session and asks the phone to write the pairing record. The finished record is sealed with the app's Keychain key and stored where only this app can read it — nothing is uploaded.")
+                    Text("Focus Plus runs the whole lockdown handshake here: it introduces itself, reads the phone, generates a host certificate with OpenSSL, starts the encrypted session and asks the phone to write the pairing record. The finished record is sealed with the app's Keychain key and stored where only this app can read it — nothing is uploaded.")
                         .font(.footnote)
-                    Text("This needs the JIT tunnel running on this device, because that is what reaches the phone's lockdown service. If the handshake stops, the log above names the step that refused it. A record made by SideStore or the StikDebug helper can still be added with “Add pairing file…”.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 } header: {
                     Text("What this does")
                 }

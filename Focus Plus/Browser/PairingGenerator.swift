@@ -294,19 +294,26 @@ final class PairingGenerator: ObservableObject {
     @Published private(set) var log: [String] = []
     @Published private(set) var device: LockdownDeviceInfo?
     @Published private(set) var wantsEncryptedSession = false
-    @Published var host: String = JITManager.tunnelHost
-    @Published var portText: String = String(JITManager.tunnelPort)
+    /// The record this run wrote, once it is saved and sealed.
+    @Published private(set) var savedPairing: JITPairing?
+    /// The tunnel address, shared with the JIT store so the status check and
+    /// this sheet always point at the same place.
+    @Published var host: String = JITManager.shared.tunnelHostText
+    @Published var portText: String = JITManager.shared.tunnelPortText
 
     func run() async {
         guard phase != .running else { return }
         phase = .running
         log = []
         device = nil
+        savedPairing = nil
         wantsEncryptedSession = false
 
         let hostID = UUID().uuidString.uppercased()
         let systemBUID = UUID().uuidString.uppercased()
-        let port = UInt16(portText.trimmingCharacters(in: .whitespaces)) ?? JITManager.tunnelPort
+        let port = UInt16(portText.trimmingCharacters(in: .whitespaces)) ?? JITManager.defaultPort
+        JITManager.shared.tunnelHostText = host
+        JITManager.shared.tunnelPortText = String(port)
         let transport = PairingTransport()
 
         do {
@@ -358,6 +365,7 @@ final class PairingGenerator: ObservableObject {
             try transport.send([
                 "Label": "Focus Plus",
                 "Request": "Pair",
+                "PairingOptions": ["ExtendedPairingErrors": true],
                 "PairRecord": [
                     "DeviceCertificate": deviceCertificate ?? Data(),
                     "HostCertificate": identity.certificateDER,
@@ -391,6 +399,12 @@ final class PairingGenerator: ObservableObject {
             if let name = info.name {
                 pairingRecord["DeviceName"] = name
             }
+            if let model = info.model {
+                pairingRecord["ProductType"] = model
+            }
+            if let version = info.systemVersion {
+                pairingRecord["ProductVersion"] = version
+            }
 
             guard let data = try? PropertyListSerialization.data(
                 fromPropertyList: pairingRecord,
@@ -402,9 +416,13 @@ final class PairingGenerator: ObservableObject {
 
             switch JITManager.shared.importPairingData(data) {
             case .success(let pairing):
+                JITManager.shared.setActive(pairing.udid)
+                savedPairing = pairing
                 note("Saved: \(pairing.displayName)")
                 note("Pairing file generated on this device.")
                 phase = .finished
+                await JITManager.shared.checkTunnel()
+                note("Tunnel \(JITManager.shared.tunnel.label.lowercased())")
             case .failure(let error):
                 throw PairingGeneratorError.crypto(error.localizedDescription)
             }

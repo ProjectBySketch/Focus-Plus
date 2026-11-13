@@ -18,6 +18,7 @@ struct StartPageView: View {
     @ObservedObject private var history = HistoryStore.shared
     @ObservedObject private var customization = CustomizationStore.shared
     @ObservedObject private var favorites = FavoritesStore.shared
+    @ObservedObject private var jit = JITManager.shared
     @StateObject private var suggestions = SearchSuggestionsController()
 
     @FocusState private var searchFocused: Bool
@@ -45,6 +46,7 @@ struct StartPageView: View {
                         greeting
                     }
                     searchField
+                    statusStrip
                     if sections.contains(.favorites) && !customization.minimalisticMode {
                         favoritesGrid
                     }
@@ -105,19 +107,72 @@ extension StartPageView {
     private var backdrop: some View {
         ZStack {
             Theme.backdropGradient
-            Circle()
-                .fill(Theme.accent.opacity(0.22))
-                .frame(width: 360, height: 360)
-                .blur(radius: 120)
-                .offset(x: -90, y: -210)
-            Circle()
-                .fill((festive ? Theme.christmasRed : Theme.accent).opacity(0.14))
-                .frame(width: 300, height: 300)
-                .blur(radius: 130)
-                .offset(x: 140, y: 250)
+            if customization.showBackdropGlow {
+                Circle()
+                    .fill(Theme.accent.opacity(0.22))
+                    .frame(width: 360, height: 360)
+                    .blur(radius: 120)
+                    .offset(x: -90, y: -210)
+                Circle()
+                    .fill((festive ? Theme.christmasRed : Theme.accent).opacity(0.14))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 130)
+                    .offset(x: 140, y: 250)
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+    }
+
+    // MARK: - Status strip
+
+    /// Three small chips under the search field: what will be searched, what
+    /// the interface is wearing, and whether a JIT tunnel is answering. Each
+    /// one goes straight to the page that changes it.
+    private var statusStrip: some View {
+        HStack(spacing: 8) {
+            Button {
+                manager.showSettings = true
+            } label: {
+                chip(symbol: "magnifyingglass", text: customization.searchEngine.shortName)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                manager.showSettings = true
+            } label: {
+                chip(symbol: customization.themePreset.symbol,
+                     text: customization.themePreset.displayName)
+            }
+            .buttonStyle(.plain)
+
+            if jit.isPaired {
+                Button {
+                    manager.showSettings = true
+                } label: {
+                    chip(symbol: jit.tunnel.symbol,
+                         text: jit.tunnel == .reachable ? "JIT ready" : "JIT off",
+                         tint: jit.tunnel == .reachable ? Theme.accent : nil)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func chip(symbol: String, text: String, tint: Color? = nil) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: symbol)
+                .font(.system(size: 9, weight: .bold))
+            Text(text)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+        }
+        .foregroundStyle(tint ?? .white.opacity(0.6))
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(Color.white.opacity(0.06), in: Capsule())
+        .overlay(Capsule().strokeBorder(tint == nil ? Color.white.opacity(0.06) : Color.clear))
     }
 
     private var topBar: some View {
